@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Vishwas Kumawat, Field Notes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+:root{
+  --paper:#EDE7D8;
+  --paper-2:#E4DCC8;
+  --ink:#26241F;
+  --ink-soft:#5A5548;
+  --thread:#8C6F52;
+  --moss:#5B7B6C;
+  --rust:#B5562B;
+  --line:rgba(38,36,31,0.18);
+}
+*{box-sizing:border-box; margin:0; padding:0;}
+html{scroll-behavior:smooth;}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:'Lora', serif;
+  overflow-x:hidden;
+}
+body::before{
+  content:"";
+  position:fixed; inset:0;
+  pointer-events:none;
+  opacity:.5;
+  z-index:2;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+}
+#bg-canvas{
+  position:fixed; inset:0; z-index:0;
+  opacity:.85;
+}
+.wrap{ position:relative; z-index:1; max-width:920px; margin:0 auto; padding:0 32px; }
+
+/* --- thread binding rail --- */
+.rail{
+  position:fixed; top:0; bottom:0; left:calc(50% - 460px - 34px);
+  width:2px; background:repeating-linear-gradient(var(--thread) 0 10px, transparent 10px 20px);
+  opacity:.5; z-index:1;
+}
+@media (max-width:1000px){ .rail{ display:none; } }
+
+header{
+  min-height:100vh; display:flex; flex-direction:column; justify-content:center;
+  position:relative; z-index:1;
+}
+.eyebrow-tape{
+  display:inline-block; font-family:'IBM Plex Mono', monospace; font-size:.8rem;
+  color:var(--ink-soft); background:var(--paper-2); padding:4px 12px;
+  transform:rotate(-1.4deg); border:1px solid var(--line); width:fit-content;
+  margin-bottom:22px; box-shadow:1px 2px 0 rgba(0,0,0,.05);
+}
+h1.name{
+  font-family:'Fraunces', serif; font-weight:700; font-size:clamp(3rem,9vw,6.4rem);
+  line-height:.98; letter-spacing:-.01em; max-width:11ch;
+}
+.name em{ font-style:italic; font-weight:400; color:var(--moss); }
+.subtitle{
+  margin-top:22px; font-size:1.2rem; max-width:46ch; color:var(--ink-soft); line-height:1.55;
+}
+
+/* --- page sections --- */
+section{
+  position:relative; z-index:1; padding:110px 0;
+  border-top:1px solid var(--line);
+}
+.pin{
+  position:absolute; top:-9px; left:40px; width:16px; height:16px; border-radius:50%;
+  background:radial-gradient(circle at 35% 30%, #d98a5e, var(--rust));
+  box-shadow:0 3px 4px rgba(0,0,0,.25);
+}
+.tag{
+  font-family:'IBM Plex Mono', monospace; font-size:.78rem; color:var(--moss);
+  letter-spacing:.02em; margin-bottom:14px;
+}
+h2{
+  font-family:'Fraunces', serif; font-weight:600; font-size:clamp(1.9rem,4vw,2.7rem);
+  max-width:16ch; margin-bottom:26px;
+}
+.lede{ font-size:1.08rem; color:var(--ink-soft); max-width:60ch; line-height:1.7; margin-bottom:10px; }
+
+/* about */
+.about-grid{ display:grid; grid-template-columns:1.3fr .9fr; gap:48px; }
+@media (max-width:760px){ .about-grid{ grid-template-columns:1fr; } }
+.fact-card{
+  background:var(--paper-2); border:1px solid var(--line); padding:22px 24px;
+  transform:rotate(.6deg); transition:transform .35s ease, box-shadow .35s ease;
+}
+.fact-card:hover{ transform:rotate(0deg) translateY(-4px); box-shadow:3px 6px 10px rgba(0,0,0,.12); }
+.fact-card + .fact-card{ margin-top:16px; transform:rotate(-.5deg); }
+.fact-card .k{ font-family:'IBM Plex Mono', monospace; font-size:.72rem; color:var(--ink-soft); }
+.fact-card .v{ font-family:'Fraunces', serif; font-size:1.6rem; margin-top:4px; }
+
+/* timeline (experience) */
+.tl-item{ display:grid; grid-template-columns:150px 1fr; gap:24px; padding:26px 0; border-top:1px dashed var(--line); }
+.tl-item:first-of-type{ border-top:none; }
+.tl-when{ font-family:'IBM Plex Mono', monospace; font-size:.8rem; color:var(--ink-soft); padding-top:4px; }
+.tl-what h3{ font-family:'Fraunces', serif; font-size:1.3rem; font-weight:600; }
+.tl-what .org{ color:var(--moss); font-style:italic; margin-bottom:10px; }
+.tl-what ul{ padding-left:18px; color:var(--ink-soft); line-height:1.65; }
+.tl-what a{ color:var(--rust); }
+
+/* projects */
+.proj{
+  display:grid; grid-template-columns:.55fr 1.45fr; gap:36px; align-items:start;
+  padding:34px 0; border-top:1px dashed var(--line);
+  transition:transform .35s ease, background .35s ease;
+}
+.proj:hover{ transform:translateX(6px); background:rgba(255,255,255,.25); }
+.proj:first-of-type{ border-top:none; }
+@media (max-width:700px){ .proj{ grid-template-columns:1fr; } }
+.proj-num{ font-family:'Fraunces', serif; font-style:italic; font-size:2.6rem; color:var(--paper-2); -webkit-text-stroke:1.5px var(--ink-soft); }
+.proj-stack{ font-family:'IBM Plex Mono', monospace; font-size:.72rem; color:var(--moss); margin-bottom:8px; }
+.proj h3{ font-family:'Fraunces', serif; font-size:1.5rem; margin-bottom:8px; }
+.proj p{ color:var(--ink-soft); line-height:1.65; margin-bottom:10px; }
+.proj a{ font-family:'IBM Plex Mono', monospace; font-size:.82rem; color:var(--rust); text-decoration:none; border-bottom:1px solid var(--rust); }
+
+/* skills */
+.skill-cloud{ display:flex; flex-wrap:wrap; gap:10px; }
+.skill-cloud span{
+  font-family:'IBM Plex Mono', monospace; font-size:.82rem; padding:7px 13px;
+  border:1px solid var(--line); background:var(--paper-2);
+  display:inline-block; transition:transform .25s ease;
+}
+.skill-cloud span:hover{ transform:rotate(-3deg) scale(1.06); border-color:var(--rust); color:var(--rust); }
+
+/* contact */
+footer{ padding:120px 0 70px; position:relative; z-index:1; border-top:1px solid var(--line); }
+footer h2{ max-width:none; }
+.contact-links{ margin-top:26px; display:flex; flex-wrap:wrap; gap:20px 28px; font-family:'IBM Plex Mono', monospace; }
+.contact-links a{ color:var(--ink); text-decoration:none; border-bottom:1px solid var(--ink-soft); padding-bottom:2px; }
+.contact-links a:hover{ color:var(--rust); border-color:var(--rust); }
+.foot-note{ margin-top:70px; font-size:.8rem; color:var(--ink-soft); font-family:'IBM Plex Mono', monospace; }
+
+/* reveal */
+.reveal{ opacity:0; transform:translateY(18px) rotate(.2deg); transition:opacity .7s ease, transform .7s ease; }
+.reveal.in{ opacity:1; transform:translateY(0) rotate(0); }
+@media (prefers-reduced-motion:reduce){
+  .reveal{ opacity:1; transform:none; transition:none; }
+  .scroll-cue .stem{ animation:none; }
+}
+</style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+<div class="rail"></div>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow-tape">field notes / cs &amp; nlp</span>
+    <h1 class="name">Vishwas<br><em>Kumawat</em></h1>
+    <p class="subtitle">I build systems that read messy human documents like resumes, headlines, and forms, then turn them into structure a machine can use. CS undergrad at IIITDM Jabalpur, currently deep in NLP and full-stack engineering.</p>
+  </header>
+
+  <section id="about">
+    <div class="pin"></div>
+    <p class="tag">01 / about</p>
+    <h2>Where language meets code.</h2>
+    <div class="about-grid">
+      <p class="lede reveal">I'm most interested in the seam between raw text and clean data, teaching pipelines to pull education, skills, and intent out of a document the way a person would, then handing that structure off to something smarter. Outside of parsers and classifiers, I spend my time on LeetCode chasing cleaner algorithms.</p>
+      <div class="reveal">
+        <div class="fact-card"><div class="k">problems solved</div><div class="v">200+</div></div>
+        <div class="fact-card"><div class="k">leetcode rating</div><div class="v">1715</div></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="experience">
+    <div class="pin"></div>
+    <p class="tag">02 / experience</p>
+    <h2>What I've worked on.</h2>
+    <div class="tl-item reveal">
+      <div class="tl-when">Jun – Jul 2025<br>Chandigarh</div>
+      <div class="tl-what">
+        <h3>Data Science Intern</h3>
+        <div class="org">IDS Infotech Ltd.</div>
+        <ul>
+          <li>Engineered an AI resume-parsing pipeline extracting structured data from PDF/DOCX resumes.</li>
+          <li>Used spaCy, NER, regex and custom tokenization to pull education, experience, skills and projects.</li>
+          <li>Built reusable NLP components to keep the pipeline maintainable as formats varied.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="projects">
+    <div class="pin"></div>
+    <p class="tag">03 / projects</p>
+    <h2>Things I've shipped.</h2>
+
+    <div class="proj reveal">
+      <div class="proj-num">01</div>
+      <div>
+        <div class="proj-stack">Python · AST · Git Internals</div>
+        <h3>PyGit-Health</h3>
+        <p>A from-scratch clone of Git's core internals (SHA-1 objects, trees, commits) with tooling no toy Git clone has: a commit-quality scorer, an AST-based dead-code detector, auto-bisect to find the commit that broke your tests, and a custom COPY/INSERT delta compressor benchmarked against zlib. Zero external dependencies.</p>
+        <a href="https://github.com/vishwas-kumawat/pygit-health" target="_blank" rel="noopener">view on github →</a>
+      </div>
+    </div>
+
+    <div class="proj reveal">
+      <div class="proj-num">02</div>
+      <div>
+        <div class="proj-stack">Python · spaCy · LangChain · Pydantic · Gemini API</div>
+        <h3>AI Resume Parser</h3>
+        <p>Parses 100+ real resumes into structured JSON, then calls the Gemini API to score candidate-job fit. Pydantic keeps every LLM response schema-valid.</p>
+        <a href="https://github.com/vishwas-kumawat/resume_parser" target="_blank" rel="noopener">view on github →</a>
+      </div>
+    </div>
+
+    <div class="proj reveal">
+      <div class="proj-num">03</div>
+      <div>
+        <div class="proj-stack">Python · Scikit-learn · NLTK · TF-IDF</div>
+        <h3>Fake News Detection</h3>
+        <p>Logistic Regression classifier trained on 44,000+ articles, with an NLTK preprocessing pipeline and TF-IDF vectorization, benchmarked via confusion matrix and standard metrics.</p>
+        <a href="https://github.com/vishwas-kumawat/fake_news_detection" target="_blank" rel="noopener">view on github →</a>
+      </div>
+    </div>
+
+    <div class="proj reveal">
+      <div class="proj-num">04</div>
+      <div>
+        <div class="proj-stack">HTML · CSS · PHP · MySQL</div>
+        <h3>Placement Management Portal</h3>
+        <p>Role-based portal for students, companies and admins covering authentication, job postings, applications and offer tracking, backed by a normalized MySQL schema. Built with a four-person team.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="skills">
+    <div class="pin"></div>
+    <p class="tag">04 / toolkit</p>
+    <h2>What I reach for.</h2>
+    <div class="skill-cloud reveal">
+      <span>C / C++</span><span>Python</span><span>JavaScript</span><span>PHP</span>
+      <span>React</span><span>HTML/CSS</span><span>MySQL</span>
+      <span>spaCy</span><span>NLTK</span><span>LangChain</span><span>Gemini API</span>
+      <span>Scikit-learn</span><span>Pandas</span><span>NumPy</span><span>Git Internals</span>
+    </div>
+  </section>
+
+  <footer>
+    <p class="tag">05 / contact</p>
+    <h2>Let's talk.</h2>
+    <p class="lede">Open to internships and collaborative projects in NLP, ML, and full-stack development.</p>
+    <div class="contact-links">
+      <a href="mailto:vishwaskumawat1184@gmail.com">vishwaskumawat1184@gmail.com</a>
+      <a href="tel:6367445116">6367445116</a>
+      <a href="https://linkedin.com/in/vishwaskumawat1184" target="_blank" rel="noopener">LinkedIn</a>
+      <a href="https://github.com/vishwas-kumawat" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://leetcode.com/u/kumawatvishwas/" target="_blank" rel="noopener">LeetCode</a>
+    </div>
+    <p class="foot-note">Vishwas Kumawat, IIITDM Jabalpur, Class of 2027</p>
+  </footer>
+</div>
+
+<script>
+// reveal on scroll
+const io = new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{ if(e.isIntersecting) e.target.classList.add('in'); });
+},{ threshold:.15 });
+document.querySelectorAll('.reveal').forEach(el=>io.observe(el));
+
+// three.js background: a matte, thread-like knot of particles, no glass, no gloss
+let scene, camera, renderer, knot, particles, mouseX=0, mouseY=0;
+function initThree(){
+  const canvas = document.getElementById('bg-canvas');
+  scene = new THREE.Scene();
+  camera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 0.1, 100);
+  camera.position.z = 9;
+
+  renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+
+  // matte torus-knot line mesh, a "thread" made of many strands, like string art
+  const geo = new THREE.TorusKnotGeometry(2.3, 0.55, 220, 24, 2, 3);
+  const mat = new THREE.MeshStandardMaterial({
+    color: 0x5B7B6C, roughness:1, metalness:0, flatShading:false,
+    wireframe:true
+  });
+  knot = new THREE.Mesh(geo, mat);
+  knot.position.set(2.6, 0.4, 0);
+  scene.add(knot);
+
+  const mat2 = new THREE.MeshStandardMaterial({ color:0xB5562B, roughness:1, metalness:0, wireframe:true, transparent:true, opacity:.35 });
+  const knot2 = new THREE.Mesh(geo.clone(), mat2);
+  knot2.scale.set(1.15,1.15,1.15);
+  knot2.position.copy(knot.position);
+  knot.userData.twin = knot2;
+  scene.add(knot2);
+
+  // soft light so matte material isn't flat black
+  scene.add(new THREE.AmbientLight(0xffffff, .9));
+  const dl = new THREE.DirectionalLight(0xffffff, .6);
+  dl.position.set(3,4,5);
+  scene.add(dl);
+
+  // scattered "ink dot" particles for texture, matte points not glossy
+  const pGeo = new THREE.BufferGeometry();
+  const count = 260;
+  const pos = new Float32Array(count*3);
+  for(let i=0;i<count;i++){
+    pos[i*3]   = (Math.random()-0.5)*18;
+    pos[i*3+1] = (Math.random()-0.5)*11;
+    pos[i*3+2] = (Math.random()-0.5)*6 - 2;
+  }
+  pGeo.setAttribute('position', new THREE.BufferAttribute(pos,3));
+  const pMat = new THREE.PointsMaterial({ color:0x26241F, size:0.035, transparent:true, opacity:.35 });
+  particles = new THREE.Points(pGeo, pMat);
+  scene.add(particles);
+
+  window.addEventListener('resize', onResize);
+  window.addEventListener('mousemove', (e)=>{
+    mouseX = (e.clientX/window.innerWidth - .5);
+    mouseY = (e.clientY/window.innerHeight - .5);
+  });
+  animate();
+}
+function onResize(){
+  camera.aspect = window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+}
+let t=0;
+function animate(){
+  requestAnimationFrame(animate);
+  t += 0.0035;
+  knot.rotation.x = t*1.1 + mouseY*0.4;
+  knot.rotation.y = t*0.8 + mouseX*0.4;
+  if(knot.userData.twin){
+    knot.userData.twin.rotation.x = knot.rotation.x*-0.6;
+    knot.userData.twin.rotation.y = knot.rotation.y*-0.6;
+  }
+  particles.rotation.y = t*0.15;
+  const scrollT = (window.scrollY || 0) / (document.body.scrollHeight - window.innerHeight);
+  camera.position.x = -scrollT*3.2;
+  camera.position.y = scrollT*1.4;
+  renderer.render(scene, camera);
+}
+initThree();
+</script>
+</body>
+</html>
